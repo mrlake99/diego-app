@@ -475,7 +475,7 @@ function Setup({onDone}){
     <div key={4}>
       <div style={S.setupH}>Your groomer</div>
       <PlaceLookup label="Groomer" nameKey="groomerName" phoneKey="groomerPhone" addressKey="groomerAddress" form={form} setForm={setForm} suffix="dog groomer UK" last/>
-      <button style={S.nextBtn} onClick={()=>onDone(form)}>All done</button>
+      <button style={S.nextBtn} onClick={()=>{ if(form.name) onDone(form); }}>All done</button>
     </div>,
   ];
   return(<div style={S.app}>
@@ -485,23 +485,16 @@ function Setup({onDone}){
 }
 
 function BreedRoller({value,onChange}){
-  const ITEM_H=40;const defaultIdx=Math.max(0,BREEDS.indexOf(value));
-  const [idx,setIdx]=useState(defaultIdx);
-  const startY=useRef(null);const startIdx=useRef(idx);
-  useEffect(()=>{onChange(BREEDS[idx]);},[idx]);
-  const clamp=i=>Math.max(0,Math.min(BREEDS.length-1,i));
-  function onTouchStart(e){startY.current=e.touches[0].clientY;startIdx.current=idx;}
-  function onTouchMove(e){e.preventDefault();const dy=startY.current-e.touches[0].clientY;setIdx(clamp(startIdx.current+Math.round(dy/ITEM_H)));}
-  function onWheel(e){e.preventDefault();setIdx(i=>clamp(i+(e.deltaY>0?1:-1)));}
-  const offset=(2-idx)*ITEM_H;
-  return(<div style={{background:"#FAF4EC",borderRadius:12,border:"1.5px solid #E8DDD0",overflow:"hidden"}}>
-    <div className="roller-wrap" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onWheel={onWheel} style={{touchAction:"none"}}>
-      <div className="roller-highlight"/><div className="roller-fade-top"/><div className="roller-fade-bot"/>
-      <div className="roller-list" style={{transform:`translateY(${offset+80}px)`}}>
-        {BREEDS.map((b,i)=>{const dist=Math.abs(i-idx);return<div key={b} className={`roller-item ${dist===0?"selected":dist===1?"near":"far"}`} onClick={()=>setIdx(i)}>{b}</div>;})}
-      </div>
-    </div>
-  </div>);
+  return(
+    <select
+      value={value||""}
+      onChange={e=>onChange(e.target.value)}
+      style={{width:"100%",background:"#FAF4EC",border:"1.5px solid #DDD5C8",borderRadius:10,padding:"12px 14px",fontSize:15,outline:"none",fontFamily:"'DM Sans',sans-serif",color:value?"#2A1A0A":"#B0A090",appearance:"none",WebkitAppearance:"none",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B0A090' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",boxSizing:"border-box"}}
+    >
+      <option value="" disabled>Select breed…</option>
+      {BREEDS.map(b=><option key={b} value={b}>{b}</option>)}
+    </select>
+  );
 }
 
 function CropModal({src,onDone,onClose}){
