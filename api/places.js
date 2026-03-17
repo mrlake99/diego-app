@@ -7,12 +7,25 @@ export default async function handler(req, res) {
   if (!query) return res.status(400).json({ error: "Missing query" });
 
   const key = process.env.GOOGLE_PLACES_API_KEY;
-  const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${key}`;
+  const url = `https://places.googleapis.com/v1/places:searchText`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.nationalPhoneNumber"
+      },
+      body: JSON.stringify({ textQuery: query })
+    });
     const data = await response.json();
-    res.status(200).json(data);
+    const results = (data.places || []).map(p => ({
+      name: p.displayName?.text || "",
+      formatted_address: p.formattedAddress || "",
+      formatted_phone_number: p.nationalPhoneNumber || ""
+    }));
+    res.status(200).json({ results });
   } catch (err) {
     res.status(500).json({ error: "Places API request failed" });
   }
